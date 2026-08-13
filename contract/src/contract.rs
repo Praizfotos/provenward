@@ -175,7 +175,7 @@ impl Provenward {
     /// Public, auth-free serial verification. The consumer-facing entrypoint.
     pub fn verify_serial(env: Env, batch_id: BytesN<32>, serial_number: u64) -> VerificationResult {
         let Some(batch) = read_batch(&env, &batch_id) else {
-            return VerificationResult::NotFound;
+            return VerificationResult::Unregistered;
         };
         if serial_number < batch.serial_range_start || serial_number > batch.serial_range_end {
             return VerificationResult::OutOfRange;
@@ -556,13 +556,13 @@ mod tests {
     }
 
     #[test]
-    fn test_verify_serial_not_found() {
+    fn test_verify_serial_unregistered() {
         let (env, contract_id, _admin) = setup();
         let client = ProvenwardClient::new(&env, &contract_id);
         let unknown = batch_id(&env, 42);
         assert_eq!(
             client.verify_serial(&unknown, &1000),
-            VerificationResult::NotFound
+            VerificationResult::Unregistered
         );
     }
 

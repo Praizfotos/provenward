@@ -26,7 +26,7 @@ export async function verifySerialWithFallback(
       include: { manufacturer: true },
     });
     if (!batch) {
-      return { result: { status: "not_found" }, fromContract: false };
+      return { result: { status: "unregistered" }, fromContract: false };
     }
     if (
       serial < batch.serialRangeStart ||
