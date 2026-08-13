@@ -1,0 +1,16 @@
+# Local build artifacts
+node_modules/
+.next/
+out/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Misc
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+npm-debug.log*
