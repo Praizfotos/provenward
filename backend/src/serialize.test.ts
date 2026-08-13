@@ -51,9 +51,9 @@ describe("verificationResultToJson", () => {
     });
   });
 
-  it("serializes not_found and out_of_range arms", () => {
-    expect(verificationResultToJson({ status: "not_found" })).toEqual({
-      status: "not_found",
+  it("serializes unregistered and out_of_range arms", () => {
+    expect(verificationResultToJson({ status: "unregistered" })).toEqual({
+      status: "unregistered",
       details: null,
     });
     expect(verificationResultToJson({ status: "out_of_range" })).toEqual({

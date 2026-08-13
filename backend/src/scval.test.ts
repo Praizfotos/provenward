@@ -77,9 +77,9 @@ describe("decodeVerificationResult", () => {
     });
   });
 
-  it("decodes NotFound", () => {
-    expect(decodeVerificationResult(s.scvVec([s.scvSymbol("NotFound")]))).toEqual({
-      status: "not_found",
+  it("decodes Unregistered", () => {
+    expect(decodeVerificationResult(s.scvVec([s.scvSymbol("Unregistered")]))).toEqual({
+      status: "unregistered",
     });
   });
 

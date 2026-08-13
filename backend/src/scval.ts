@@ -10,7 +10,7 @@ export interface GenuineDetails {
 
 export type VerificationResult =
   | { status: "genuine"; details: GenuineDetails }
-  | { status: "not_found" }
+  | { status: "unregistered" }
   | { status: "out_of_range" };
 
 export interface Recall {
@@ -138,8 +138,8 @@ export function decodeVerificationResult(scv: xdr.ScVal): VerificationResult {
   const elements = vecOrThrow(scv);
   const variant = bytesToString(elements[0].sym());
   switch (variant) {
-    case "NotFound":
-      return { status: "not_found" };
+    case "Unregistered":
+      return { status: "unregistered" };
     case "OutOfRange":
       return { status: "out_of_range" };
     case "Genuine": {

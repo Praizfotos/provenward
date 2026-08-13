@@ -90,7 +90,8 @@ pub struct GenuineDetails {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum VerificationResult {
     Genuine(GenuineDetails),
-    NotFound,
+    /// The batch identifier is not registered with any manufacturer.
+    Unregistered,
     OutOfRange,
 }
 

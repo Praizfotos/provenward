@@ -36,14 +36,14 @@ export function VerificationResultPanel({ response }: { response: VerifyResponse
               ? "Authentic product"
               : result.status === "out_of_range"
                 ? "Serial outside registered range"
-                : "Batch not found"}
+                : "Unregistered batch"}
           </CardTitle>
           <CardDescription>
             {result.status === "genuine"
               ? "This serial number is registered on-chain for the given batch."
               : result.status === "out_of_range"
                 ? "The batch exists, but this serial falls outside its registered range."
-                : "No batch matching this identifier exists on the registry."}
+                : "This batch identifier is not registered with any manufacturer on the registry."}
           </CardDescription>
         </CardHeader>
         {result.status === "genuine" && result.details ? (

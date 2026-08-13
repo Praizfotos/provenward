@@ -100,7 +100,7 @@ manufacturerRoute.get(
       totalBatches: manufacturer.batches.length,
       totalScans: scans.length,
       genuineScans: outcomeCounts.genuine ?? 0,
-      nonGenuineScans: (outcomeCounts.not_found ?? 0) + (outcomeCounts.out_of_range ?? 0),
+      nonGenuineScans: (outcomeCounts.unregistered ?? 0) + (outcomeCounts.out_of_range ?? 0),
       totalRecalls: recalls.length,
       criticalRecalls: recalls.filter((r) => r.severity === "Critical").length,
     });

@@ -26,8 +26,8 @@ export function verificationResultToJson(
           manufacturedDate: result.details.manufacturedDate.toString(),
         },
       };
-    case "not_found":
-      return { status: "not_found", details: null };
+    case "unregistered":
+      return { status: "unregistered", details: null };
     case "out_of_range":
       return { status: "out_of_range", details: null };
   }

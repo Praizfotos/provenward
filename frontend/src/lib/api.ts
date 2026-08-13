@@ -11,7 +11,7 @@ export interface GenuineDetails {
   manufacturedDate: string;
 }
 
-export type VerificationStatus = "genuine" | "not_found" | "out_of_range";
+export type VerificationStatus = "genuine" | "unregistered" | "out_of_range";
 
 export interface VerificationResult {
   status: VerificationStatus;
