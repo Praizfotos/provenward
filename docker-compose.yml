@@ -1,0 +1,113 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-provenward}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-provenward}
+      POSTGRES_DB: ${POSTGRES_DB:-provenward}
+    volumes:
+      - provenward_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-provenward} -d ${POSTGRES_DB:-provenward}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://provenward:provenward@postgres:5432/provenward}
+    command: sh -c "npx prisma migrate deploy && echo 'migrations applied'"
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOST: 0.0.0.0
+      DATABASE_URL: ${DATABASE_URL:-postgresql://provenward:provenward@postgres:5432/provenward}
+      CONTRACT_ID: ${CONTRACT_ID:?set CONTRACT_ID in .env}
+      SOROBAN_RPC_URL: ${SOROBAN_RPC_URL:-https://soroban-testnet.stellar.org:443}
+      STELLAR_NETWORK_PASSPHRASE: ${STELLAR_NETWORK_PASSPHRASE:-Test SDF Network ; September 2015}
+      VERIFY_CACHE_TTL_MS: 60000
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-Provenward <no-reply@provenward.local>}
+    ports:
+      - "3001:3001"
+
+  indexer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://provenward:provenward@postgres:5432/provenward}
+      CONTRACT_ID: ${CONTRACT_ID:?set CONTRACT_ID in .env}
+      SOROBAN_RPC_URL: ${SOROBAN_RPC_URL:-https://soroban-testnet.stellar.org:443}
+      STELLAR_NETWORK_PASSPHRASE: ${STELLAR_NETWORK_PASSPHRASE:-Test SDF Network ; September 2015}
+      INDEXER_POLL_INTERVAL_MS: 10000
+      INDEXER_EVENT_LIMIT: 100
+      INDEXER_START_LEDGER: ${INDEXER_START_LEDGER:-0}
+    command: ["node", "dist/indexer.js"]
+
+  notifier:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://provenward:provenward@postgres:5432/provenward}
+      CONTRACT_ID: ${CONTRACT_ID:?set CONTRACT_ID in .env}
+      NOTIFIER_POLL_INTERVAL_MS: 30000
+      NOTIFIER_BATCH_SIZE: 20
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-Provenward <no-reply@provenward.local>}
+    command: ["node", "dist/notifier.js"]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+      args:
+        BACKEND_URL: ${BACKEND_URL_FOR_BUILD:-http://backend:3001}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "3000:3000"
+
+volumes:
+  provenward_pgdata:

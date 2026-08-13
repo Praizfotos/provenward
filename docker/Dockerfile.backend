@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# Backend (API + indexer + notifier) image.
+# The same image is used for all three workloads; docker-compose overrides the
+# command to select which process runs.
+# ---------------------------------------------------------------------------
+
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY backend/package.json backend/package-lock.json ./
+RUN npm ci
+
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY backend ./
+RUN npx prisma generate \
+  && npm run build
+
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3001
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./package.json
+RUN chown -R node:node /app
+USER node
+EXPOSE 3001
+CMD ["node", "dist/index.js"]

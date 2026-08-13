@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+target/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Deployments (secrets and contract IDs are environment-specific)
+deployments/*.json
+!deployments/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor/OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Test coverage
+coverage/
