@@ -1,0 +1,14 @@
+{
+  "name": "provenward-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deployment tooling for the Provenward Soroban contract",
+  "type": "module",
+  "scripts": {
+    "deploy:testnet": "node deploy-testnet.mjs",
+    "deploy:standalone": "node deploy-testnet.mjs --rpc-url http://localhost:8000 --network-passphrase 'Standalone Network ; February 2017'"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^13.1.0"
+  }
+}
