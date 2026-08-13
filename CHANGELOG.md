@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- Comprehensive project README and roadmap for program reviewers and
+  contributors.
 - Soroban smart contract (`contract/`): manufacturer registration, batch
   registration, serial verification, recall issuance, recall queries, and
   ownership receipts on Soroban SDK 27 (wasm32v1-none). 21 unit tests.
