@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Severity {
+  Info
+  Warning
+  Critical
+}
+
+/// A manufacturer onboarded on-chain by the contract admin.
+model Manufacturer {
+  id           Int      @id @default(autoincrement())
+  onChainId    Int      @unique
+  address      String   @unique
+  name         String
+  registeredAt DateTime
+  createdAt    DateTime @default(now())
+
+  batches Batch[]
+
+  @@map("manufacturers")
+}
+
+/// A registered production batch. Serial ranges are u64 on-chain and are
+/// stored as BigInt so values beyond 2^53 stay exact.
+model Batch {
+  id               Int         @id @default(autoincrement())
+  batchId          String      @unique
+  manufacturerId   Int
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [onChainId])
+  productName      String
+  serialRangeStart BigInt
+  serialRangeEnd   BigInt
+  manufacturedDate DateTime
+  registeredAt     DateTime
+  createdAt        DateTime    @default(now())
+
+  recalls Recall[]
+
+  @@index([manufacturerId])
+  @@map("batches")
+}
+
+/// A recall / safety alert indexed from on-chain events.
+model Recall {
+  id                   Int      @id @default(autoincrement())
+  recallId             Int      @unique
+  batchId              String
+  batch                Batch    @relation(fields: [batchId], references: [batchId])
+  manufacturerAddress  String
+  severity             Severity
+  messageHash          String
+  affectedSerialStart  BigInt
+  affectedSerialEnd    BigInt
+  issuedAt             DateTime
+  notified             Boolean  @default(false)
+  createdAt            DateTime @default(now())
+
+  alerts RecallAlert[]
+
+  @@index([batchId])
+  @@index([severity])
+  @@map("recalls")
+}
+
+/// A privacy-preserving ownership record. The wallet `owner` address is the
+/// only link to a person; no email, name, or phone is ever stored on-chain.
+model OwnershipReceipt {
+  id           Int      @id @default(autoincrement())
+  owner        String
+  batchId      String
+  serialNumber BigInt
+  registeredAt DateTime
+  createdAt    DateTime @default(now())
+
+  @@unique([owner, batchId, serialNumber])
+  @@index([batchId])
+  @@map("ownership_receipts")
+}
+
+/// Off-chain alert preferences. Consumers opt in here; this data never
+/// touches the ledger.
+model AlertPreference {
+  id         Int       @id @default(autoincrement())
+  owner      String    @unique
+  email      String?
+  webhookUrl String?
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("alert_preferences")
+}
+
+/// One row per consumer verification for dashboard analytics.
+model VerificationScan {
+  id           Int      @id @default(autoincrement())
+  batchId      String
+  serialNumber BigInt
+  outcome      String
+  createdAt    DateTime @default(now())
+
+  @@index([batchId])
+  @@index([createdAt])
+  @@map("verification_scans")
+}
+
+/// A queued notification for a recall affecting a registered owner.
+model RecallAlert {
+  id        Int       @id @default(autoincrement())
+  recallId  Int
+  recall    Recall    @relation(fields: [recallId], references: [recallId])
+  owner     String
+  status    String
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime  @default(now())
+
+  @@unique([recallId, owner])
+  @@index([status])
+  @@map("recall_alerts")
+}
+
+/// Single-row progress marker for the event indexer.
+model IndexerCursor {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  ledger    Int
+  updatedAt DateTime @updatedAt
+
+  @@map("indexer_cursors")
+}
