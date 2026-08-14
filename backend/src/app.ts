@@ -1,5 +1,6 @@
 import express from "express";
 import pinoHttp from "pino-http";
+import rateLimit from "express-rate-limit";
 
 import { logger } from "./logger";
 import { errorHandler } from "./middleware/errorHandler";
@@ -21,6 +22,17 @@ export function createApp(
     pinoHttp({
       logger,
       autoLogging: { ignore: (req) => req.url === "/health" },
+    }),
+  );
+
+  // Per-IP rate limit protects the public verification/recall endpoints from
+  // abusive scanning and keeps the simulated RPC reads within reasonable bounds.
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 100,
+      standardHeaders: "draft-7",
+      legacyHeaders: false,
     }),
   );
 
